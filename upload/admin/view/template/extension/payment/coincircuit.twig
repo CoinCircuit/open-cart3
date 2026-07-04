@@ -1,0 +1,196 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-payment" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+      </div>
+      <div class="panel-body">
+        <p class="text-muted">{{ text_coincircuit }}</p>
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-payment" class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_status" id="input-status" class="form-control">
+                {% if payment_coincircuit_status %}
+                <option value="1" selected="selected">{{ text_enabled }}</option>
+                <option value="0">{{ text_disabled }}</option>
+                {% else %}
+                <option value="1">{{ text_enabled }}</option>
+                <option value="0" selected="selected">{{ text_disabled }}</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-title"><span data-toggle="tooltip" title="{{ help_title }}">{{ entry_title }}</span></label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_coincircuit_title" value="{{ payment_coincircuit_title }}" placeholder="{{ entry_title }}" id="input-title" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-description"><span data-toggle="tooltip" title="{{ help_description }}">{{ entry_description }}</span></label>
+            <div class="col-sm-10">
+              <textarea name="payment_coincircuit_description" rows="3" placeholder="{{ entry_description }}" id="input-description" class="form-control">{{ payment_coincircuit_description }}</textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-environment"><span data-toggle="tooltip" title="{{ help_environment }}">{{ entry_environment }}</span></label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_environment" id="input-environment" class="form-control">
+                {% if payment_coincircuit_environment == 'sandbox' %}
+                <option value="production">{{ text_production }}</option>
+                <option value="sandbox" selected="selected">{{ text_sandbox }}</option>
+                {% else %}
+                <option value="production" selected="selected">{{ text_production }}</option>
+                <option value="sandbox">{{ text_sandbox }}</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-api-key"><span data-toggle="tooltip" title="{{ help_api_key }}">{{ entry_api_key }}</span></label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_coincircuit_api_key" value="{{ payment_coincircuit_api_key }}" placeholder="{{ entry_api_key }}" id="input-api-key" class="form-control" autocomplete="off" />
+              {% if error_api_key %}
+              <div class="text-danger">{{ error_api_key }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-webhook-secret"><span data-toggle="tooltip" title="{{ help_webhook_secret }}">{{ entry_webhook_secret }}</span></label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_coincircuit_webhook_secret" value="{{ payment_coincircuit_webhook_secret }}" placeholder="{{ entry_webhook_secret }}" id="input-webhook-secret" class="form-control" autocomplete="off" />
+              {% if error_webhook_secret %}
+              <div class="text-danger">{{ error_webhook_secret }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"><span data-toggle="tooltip" title="{{ help_webhook_url }}">{{ entry_webhook_url }}</span></label>
+            <div class="col-sm-10">
+              <input type="text" value="{{ webhook_url }}" id="input-webhook-url" class="form-control" readonly="readonly" onclick="this.select();" />
+              <div class="help-block">{{ help_webhook_url }}</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-fee-paid-by"><span data-toggle="tooltip" title="{{ help_fee_paid_by }}">{{ entry_fee_paid_by }}</span></label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_fee_paid_by" id="input-fee-paid-by" class="form-control">
+                {% if payment_coincircuit_fee_paid_by == 'merchant' %}
+                <option value="customer">{{ text_customer }}</option>
+                <option value="merchant" selected="selected">{{ text_merchant }}</option>
+                {% else %}
+                <option value="customer" selected="selected">{{ text_customer }}</option>
+                <option value="merchant">{{ text_merchant }}</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-pending-status">{{ entry_pending_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_pending_status_id" id="input-pending-status" class="form-control">
+                {% for order_status in order_statuses %}
+                <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_coincircuit_pending_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-completed-status">{{ entry_completed_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_completed_status_id" id="input-completed-status" class="form-control">
+                {% for order_status in order_statuses %}
+                <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_coincircuit_completed_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-partial-status">{{ entry_partial_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_partial_status_id" id="input-partial-status" class="form-control">
+                {% for order_status in order_statuses %}
+                <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_coincircuit_partial_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-expired-status">{{ entry_expired_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_expired_status_id" id="input-expired-status" class="form-control">
+                {% for order_status in order_statuses %}
+                <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_coincircuit_expired_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-failed-status">{{ entry_failed_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_failed_status_id" id="input-failed-status" class="form-control">
+                {% for order_status in order_statuses %}
+                <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_coincircuit_failed_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-refunded-status">{{ entry_refunded_status }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_refunded_status_id" id="input-refunded-status" class="form-control">
+                {% for order_status in order_statuses %}
+                <option value="{{ order_status.order_status_id }}"{% if order_status.order_status_id == payment_coincircuit_refunded_status_id %} selected="selected"{% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-geo-zone">{{ entry_geo_zone }}</label>
+            <div class="col-sm-10">
+              <select name="payment_coincircuit_geo_zone_id" id="input-geo-zone" class="form-control">
+                <option value="0">{{ text_all_zones }}</option>
+                {% for geo_zone in geo_zones %}
+                <option value="{{ geo_zone.geo_zone_id }}"{% if geo_zone.geo_zone_id == payment_coincircuit_geo_zone_id %} selected="selected"{% endif %}>{{ geo_zone.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-total"><span data-toggle="tooltip" title="{{ help_total }}">{{ entry_total }}</span></label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_coincircuit_total" value="{{ payment_coincircuit_total }}" placeholder="{{ entry_total }}" id="input-total" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="payment_coincircuit_sort_order" value="{{ payment_coincircuit_sort_order }}" placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control" />
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}

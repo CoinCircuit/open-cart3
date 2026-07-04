@@ -1,0 +1,59 @@
+<h2>{{ text_instruction }}</h2>
+<div class="well well-sm">
+  <p>{{ description }}</p>
+</div>
+<div class="buttons">
+  <div class="pull-right">
+    <input type="button" value="{{ button_confirm }}" id="button-confirm" data-loading-text="{{ text_loading }}" class="btn btn-primary" />
+  </div>
+</div>
+<script type="text/javascript" src="catalog/view/javascript/coincircuit/checkout.js"></script>
+<script type="text/javascript"><!--
+$('#button-confirm').on('click', function() {
+	$.ajax({
+		url: 'index.php?route=extension/payment/coincircuit/confirm',
+		dataType: 'json',
+		beforeSend: function() {
+			$('#button-confirm').button('loading');
+		},
+		success: function(json) {
+			if (json['error']) {
+				$('#button-confirm').button('reset');
+				alert(json['error']);
+				return;
+			}
+
+			var checkoutUrl = json['checkout_url'] || json['redirect'];
+
+			if (!checkoutUrl) {
+				$('#button-confirm').button('reset');
+				return;
+			}
+
+			// Embedded modal keeps the shopper on the store. Falls back to a
+			// full redirect when the embed script is unavailable or the
+			// iframe cannot load, so payment is always possible.
+			if (window.CoinCircuitCheckoutEmbed) {
+				window.CoinCircuitCheckoutEmbed.open({
+					url: checkoutUrl,
+					onComplete: function() {
+						location = json['success_url'];
+					},
+					onClose: function() {
+						$('#button-confirm').button('reset');
+					},
+					onLoadFailure: function() {
+						location = checkoutUrl;
+					}
+				});
+			} else {
+				location = checkoutUrl;
+			}
+		},
+		error: function(xhr, ajaxOptions, thrownError) {
+			$('#button-confirm').button('reset');
+			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+		}
+	});
+});
+//--></script>

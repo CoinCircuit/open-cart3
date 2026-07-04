@@ -1,0 +1,4 @@
+*.ocmod.zip
+docs/superpowers/
+.DS_Store
+Thumbs.db
