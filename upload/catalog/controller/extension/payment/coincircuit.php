@@ -74,7 +74,7 @@ class ControllerExtensionPaymentCoincircuit extends Controller {
 						$json['redirect'] = $existing['checkout_url'];
 					} else {
 						$options = array(
-							'title'       => sprintf($this->language->get('text_order_title'), $order_info['order_id']),
+							'title'       => $this->config->get('config_name'),
 							'description' => sprintf($this->language->get('text_order_description'), $order_info['order_id']),
 							'success_url' => $this->url->link('checkout/success', '', true),
 							'cancel_url'  => $this->url->link('checkout/checkout', '', true),

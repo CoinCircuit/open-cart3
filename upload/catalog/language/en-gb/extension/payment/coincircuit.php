@@ -9,7 +9,6 @@ $_['button_confirm']              = 'Confirm Order';
 $_['text_loading']                = 'Loading...';
 
 // Session
-$_['text_order_title']            = 'Order #%s';
 $_['text_order_description']      = 'Payment for order #%s';
 
 // Order history comments
