@@ -5,25 +5,32 @@ import os
 import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(ROOT, "upload")
 OUTPUT = os.path.join(ROOT, "coincircuit.ocmod.zip")
+PACKAGE_FILES = (
+    "install.json",
+    "upload/admin/controller/extension/payment/coincircuit.php",
+    "upload/admin/language/en-gb/extension/payment/coincircuit.php",
+    "upload/admin/model/extension/payment/coincircuit.php",
+    "upload/admin/view/template/extension/payment/coincircuit.twig",
+    "upload/catalog/controller/extension/payment/coincircuit.php",
+    "upload/catalog/language/en-gb/extension/payment/coincircuit.php",
+    "upload/catalog/model/extension/payment/coincircuit.php",
+    "upload/catalog/view/javascript/coincircuit/checkout.js",
+    "upload/catalog/view/theme/default/template/extension/payment/coincircuit.twig",
+)
 
 
 def collect_files():
     entries = []
-    for base, _dirs, names in os.walk(UPLOAD_DIR):
-        for name in names:
-            full = os.path.join(base, name)
-            arcname = os.path.relpath(full, ROOT).replace(os.sep, "/")
-            entries.append((full, arcname))
-    entries.sort(key=lambda pair: pair[1])
+    for arcname in PACKAGE_FILES:
+        full = os.path.join(ROOT, *arcname.split("/"))
+        if not os.path.isfile(full):
+            raise SystemExit("Missing package file: %s" % arcname)
+        entries.append((full, arcname))
     return entries
 
 
 def main():
-    if not os.path.isdir(UPLOAD_DIR):
-        raise SystemExit("upload/ folder not found next to build.py")
-
     entries = collect_files()
     if os.path.exists(OUTPUT):
         os.remove(OUTPUT)

@@ -16,23 +16,209 @@
 	var OVERLAY_ID = 'coincircuit-checkout-overlay';
 	var STYLES_ID = 'coincircuit-checkout-styles';
 	var LOAD_TIMEOUT_MS = 30000;
+	var activeOverlay = null;
 
 	function injectStyles() {
 		if (document.getElementById(STYLES_ID)) return;
 		var style = document.createElement('style');
 		style.id = STYLES_ID;
-		style.textContent = '' +
-			'#' + OVERLAY_ID + '{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);opacity:0;transition:opacity 0.2s ease;}' +
-			'#' + OVERLAY_ID + '.cc-visible{opacity:1;}' +
-			'#' + OVERLAY_ID + ' .cc-modal{position:relative;width:min(600px,96vw);max-width:600px;height:min(88vh,800px);border-radius:16px;background:#fff;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);opacity:0;transform:scale(0.96);transition:opacity 0.25s ease,transform 0.25s ease;}' +
-			'#' + OVERLAY_ID + ' .cc-modal.cc-ready{opacity:1;transform:scale(1);}' +
-			'#' + OVERLAY_ID + ' .cc-close{position:fixed;top:16px;right:16px;z-index:1000000;width:36px;height:36px;border:none;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,transform 0.15s;}' +
-			'#' + OVERLAY_ID + ' .cc-close:hover{background:rgba(255,255,255,0.25);transform:scale(1.1);}' +
-			'#' + OVERLAY_ID + ' iframe{width:100%;height:100%;border:none;display:block;border-radius:inherit;}' +
-			'#' + OVERLAY_ID + ' .cc-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;transition:opacity 0.2s;}' +
-			'#' + OVERLAY_ID + ' .cc-spinner div{width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:cc-spin 0.8s linear infinite;}' +
-			'@keyframes cc-spin{to{transform:rotate(360deg);}}' +
-			'@media (max-width:720px){#' + OVERLAY_ID + ' .cc-modal{width:100%;max-width:100%;height:100dvh;border-radius:0;}}';
+		style.textContent = `
+  #coincircuit-checkout-overlay {
+    --cc-surface: #fafafa;
+    --cc-foreground: #171717;
+    --cc-muted: #666;
+    --cc-edge: rgba(255, 255, 255, 0.85);
+    --cc-control: rgba(250, 250, 250, 0.88);
+    --cc-track: rgba(0, 0, 0, 0.1);
+    --cc-accent: oklch(0.52 0.22 255);
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px 64px;
+    background: rgba(12, 14, 18, 0.42);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--cc-foreground);
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  #coincircuit-checkout-overlay[data-theme="dark"] {
+    --cc-surface: #111216;
+    --cc-foreground: #f5f5f5;
+    --cc-muted: #aaa;
+    --cc-edge: rgba(255, 255, 255, 0.18);
+    --cc-control: rgba(28, 29, 33, 0.9);
+    --cc-track: rgba(255, 255, 255, 0.14);
+    --cc-accent: oklch(0.72 0.29 263.25);
+    color-scheme: dark;
+  }
+  #coincircuit-checkout-overlay, #coincircuit-checkout-overlay * {
+    box-sizing: border-box;
+  }
+  #coincircuit-checkout-overlay.cc-visible {
+    opacity: 1;
+  }
+  #coincircuit-checkout-overlay .cc-modal {
+    position: relative;
+    width: 100%;
+    max-width: 740px;
+    height: min(900px, calc(100vh - 48px));
+    height: min(900px, calc(100dvh - 48px));
+    border: 1px solid var(--cc-edge);
+    border-radius: 30px;
+    background: var(--cc-surface);
+    box-shadow: 0 32px 100px -24px rgba(0, 0, 0, 0.38);
+    transform: translateY(8px) scale(0.99);
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #coincircuit-checkout-overlay.cc-visible .cc-modal {
+    transform: translateY(0) scale(1);
+  }
+  #coincircuit-checkout-overlay .cc-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--cc-surface);
+  }
+  #coincircuit-checkout-overlay .cc-close {
+    position: absolute;
+    top: 0;
+    right: -56px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--cc-edge);
+    border-radius: 50%;
+    background: var(--cc-control);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    color: var(--cc-foreground);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 160ms ease, transform 160ms ease;
+  }
+  #coincircuit-checkout-overlay .cc-close:hover {
+    background: var(--cc-surface);
+  }
+  #coincircuit-checkout-overlay .cc-close:active {
+    transform: scale(0.96);
+  }
+  #coincircuit-checkout-overlay .cc-close:focus-visible {
+    outline: 2px solid var(--cc-accent);
+    outline-offset: 4px;
+  }
+  #coincircuit-checkout-overlay .cc-close svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+  }
+  #coincircuit-checkout-overlay iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 200ms ease;
+  }
+  #coincircuit-checkout-overlay .cc-ready iframe {
+    opacity: 1;
+    visibility: visible;
+  }
+  #coincircuit-checkout-overlay .cc-spinner {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--cc-surface);
+    color: var(--cc-muted);
+    font-size: 14px;
+    line-height: 1.5;
+    transition: opacity 200ms ease;
+  }
+  #coincircuit-checkout-overlay .cc-spinner-ring {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--cc-track);
+    border-top-color: var(--cc-accent);
+    border-radius: 50%;
+    animation: cc-spin 800ms linear infinite;
+  }
+  #coincircuit-checkout-overlay .cc-ready .cc-spinner {
+    opacity: 0;
+    pointer-events: none;
+  }
+  @keyframes cc-spin { to { transform: rotate(360deg); } }
+  @media (max-width: 720px) {
+    #coincircuit-checkout-overlay {
+      padding: 0;
+      background: var(--cc-surface);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    #coincircuit-checkout-overlay .cc-modal {
+      max-width: none;
+      height: 100vh;
+      height: 100dvh;
+      padding-top: calc(56px + env(safe-area-inset-top, 0px));
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      transform: none;
+    }
+    #coincircuit-checkout-overlay .cc-close {
+      top: calc(6px + env(safe-area-inset-top, 0px));
+      right: max(12px, env(safe-area-inset-right, 0px));
+      border-color: var(--cc-track);
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #coincircuit-checkout-overlay, #coincircuit-checkout-overlay * {
+      animation: none !important;
+      transition: none !important;
+    }
+    #coincircuit-checkout-overlay .cc-modal, #coincircuit-checkout-overlay .cc-close:active {
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    #coincircuit-checkout-overlay {
+      background: rgba(12, 14, 18, 0.85);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    #coincircuit-checkout-overlay .cc-close {
+      background: var(--cc-surface);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  @media (prefers-contrast: more) {
+    #coincircuit-checkout-overlay .cc-modal, #coincircuit-checkout-overlay .cc-close {
+      border-color: var(--cc-foreground);
+    }
+  }
+`;
 		document.head.appendChild(style);
 	}
 
@@ -63,6 +249,7 @@
 	 *
 	 * options:
 	 *   url            (required) hosted checkout URL for the session
+	 *   theme          optional light or dark overlay
 	 *   onComplete     payment confirmed by the checkout page
 	 *   onClose        shopper dismissed the modal (X button, Escape, or
 	 *                  the page's own close action)
@@ -74,19 +261,36 @@
 		}
 
 		close(); // only one modal at a time
-
 		injectStyles();
 
 		var allowedOrigin = originOf(options.url);
 		var overlay = document.createElement('div');
 		overlay.id = OVERLAY_ID;
+		overlay.setAttribute('data-theme', options.theme === 'dark' ? 'dark' : 'light');
+		var previousFocus = document.activeElement;
+		var previousOverflow = document.body.style.overflow;
+		var previousPaddingRight = document.body.style.paddingRight;
 
 		var modal = document.createElement('div');
 		modal.className = 'cc-modal';
+		modal.setAttribute('role', 'dialog');
+		modal.setAttribute('aria-modal', 'true');
+		modal.setAttribute('aria-label', 'CoinCircuit checkout');
+
+		var frame = document.createElement('div');
+		frame.className = 'cc-frame';
+		frame.setAttribute('aria-busy', 'true');
 
 		var spinner = document.createElement('div');
 		spinner.className = 'cc-spinner';
-		spinner.appendChild(document.createElement('div'));
+		spinner.setAttribute('role', 'status');
+		var spinnerRing = document.createElement('div');
+		spinnerRing.className = 'cc-spinner-ring';
+		spinnerRing.setAttribute('aria-hidden', 'true');
+		var spinnerLabel = document.createElement('span');
+		spinnerLabel.textContent = 'Loading checkout';
+		spinner.appendChild(spinnerRing);
+		spinner.appendChild(spinnerLabel);
 
 		var iframe = document.createElement('iframe');
 		iframe.src = buildEmbedUrl(options.url);
@@ -94,60 +298,83 @@
 		iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
 		iframe.setAttribute('title', 'CoinCircuit Checkout');
 		iframe.setAttribute('allow', 'payment');
+		iframe.tabIndex = -1;
 
 		var closeBtn = document.createElement('button');
 		closeBtn.className = 'cc-close';
+		closeBtn.type = 'button';
 		closeBtn.setAttribute('aria-label', 'Close checkout');
-		closeBtn.textContent = '✕';
+		var closeIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		closeIcon.setAttribute('viewBox', '0 0 24 24');
+		closeIcon.setAttribute('aria-hidden', 'true');
+		closeIcon.setAttribute('fill', 'none');
+		closeIcon.setAttribute('stroke', 'currentColor');
+		closeIcon.setAttribute('stroke-width', '1.75');
+		closeIcon.setAttribute('stroke-linecap', 'round');
+		var closePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+		closePath.setAttribute('d', 'M6 6l12 12M18 6L6 18');
+		closeIcon.appendChild(closePath);
+		closeBtn.appendChild(closeIcon);
 
-		modal.appendChild(iframe);
-		overlay.appendChild(spinner);
+		frame.appendChild(iframe);
+		frame.appendChild(spinner);
+		modal.appendChild(closeBtn);
+		modal.appendChild(frame);
 		overlay.appendChild(modal);
-		overlay.appendChild(closeBtn);
 
 		function dismiss() {
+			if (activeOverlay !== overlay) return;
 			close();
 			if (options.onClose) options.onClose();
 		}
-
 		closeBtn.addEventListener('click', dismiss);
-		// No backdrop-click dismissal: an accidental tap outside the modal
-		// must never abandon a payment in progress. Closing is deliberate
-		// only - the X button, Escape, or the checkout page's own close.
+		// An accidental tap on the backdrop must not abandon a payment.
 
 		function onKeydown(e) {
-			if (e.key === 'Escape') dismiss();
+			if (activeOverlay !== overlay) return;
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				dismiss();
+			} else if (e.key === 'Tab' && e.shiftKey && document.activeElement === closeBtn && modal.classList.contains('cc-ready')) {
+				e.preventDefault();
+				iframe.focus();
+			}
+		}
+		function onFocus(e) {
+			if (activeOverlay === overlay && !overlay.contains(e.target)) closeBtn.focus();
 		}
 		document.addEventListener('keydown', onKeydown);
+		document.addEventListener('focusin', onFocus);
 
 		var loadTimeout = setTimeout(function () {
+			if (activeOverlay !== overlay) return;
 			close();
 			if (options.onLoadFailure) options.onLoadFailure();
 		}, LOAD_TIMEOUT_MS);
-
 		iframe.addEventListener('error', function () {
-			clearTimeout(loadTimeout);
+			if (activeOverlay !== overlay) return;
 			close();
 			if (options.onLoadFailure) options.onLoadFailure();
 		});
 
+		var ready = false;
 		function onMessage(event) {
-			if (event.origin !== allowedOrigin) return;
-
+			if (activeOverlay !== overlay || event.origin !== allowedOrigin || event.source !== iframe.contentWindow) return;
 			var msg = event.data;
 			if (!msg || typeof msg.type !== 'string' || msg.type.indexOf('coincircuit:') !== 0) return;
 
 			switch (msg.type) {
 				case 'coincircuit:ready':
+					if (ready) break;
+					ready = true;
 					clearTimeout(loadTimeout);
-					var s = overlay.querySelector('.cc-spinner');
-					if (s) {
-						s.style.opacity = '0';
-						setTimeout(function () {
-							if (s.parentNode) s.parentNode.removeChild(s);
-						}, 200);
-					}
-					modal.className = 'cc-modal cc-ready';
+					frame.setAttribute('aria-busy', 'false');
+					iframe.tabIndex = 0;
+					modal.classList.add('cc-ready');
+					spinner.style.opacity = '0';
+					setTimeout(function () {
+						if (spinner.parentNode) spinner.parentNode.removeChild(spinner);
+					}, 200);
 					break;
 				case 'coincircuit:payment_complete':
 					if (options.onComplete) options.onComplete(msg.data || {});
@@ -161,27 +388,42 @@
 		}
 		window.addEventListener('message', onMessage);
 
-		// Track cleanup handles on the overlay itself so close() can find
-		// them even when called for a previous instance.
 		overlay._ccCleanup = function () {
 			clearTimeout(loadTimeout);
 			window.removeEventListener('message', onMessage);
 			document.removeEventListener('keydown', onKeydown);
+			document.removeEventListener('focusin', onFocus);
 		};
+		overlay._ccPreviousFocus = previousFocus;
+		overlay._ccPreviousOverflow = previousOverflow;
+		overlay._ccPreviousPaddingRight = previousPaddingRight;
 
+		activeOverlay = overlay;
 		document.body.appendChild(overlay);
+		var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+		if (scrollbarWidth > 0) {
+			var padding = parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
+			document.body.style.paddingRight = padding + scrollbarWidth + 'px';
+		}
 		document.body.style.overflow = 'hidden';
 		void overlay.offsetHeight; // reflow so the fade-in transition runs
-		overlay.className = 'cc-visible';
+		overlay.classList.add('cc-visible');
+		closeBtn.focus({ preventScroll: true });
 	}
 
 	function close() {
-		var overlay = document.getElementById(OVERLAY_ID);
+		var overlay = activeOverlay;
 		if (!overlay) return;
-
-		if (overlay._ccCleanup) overlay._ccCleanup();
-		overlay.className = '';
-		document.body.style.overflow = '';
+		activeOverlay = null;
+		overlay._ccCleanup();
+		overlay.classList.remove('cc-visible');
+		overlay.style.pointerEvents = 'none';
+		overlay.inert = true;
+		document.body.style.overflow = overlay._ccPreviousOverflow;
+		document.body.style.paddingRight = overlay._ccPreviousPaddingRight;
+		if (overlay._ccPreviousFocus && overlay._ccPreviousFocus.focus) {
+			overlay._ccPreviousFocus.focus({ preventScroll: true });
+		}
 		setTimeout(function () {
 			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 		}, 200);
