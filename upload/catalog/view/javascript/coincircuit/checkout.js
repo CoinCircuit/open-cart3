@@ -178,18 +178,16 @@
       max-width: none;
       height: 100vh;
       height: 100dvh;
-      padding-top: calc(56px + env(safe-area-inset-top, 0px));
       border: 0;
       border-radius: 0;
       box-shadow: none;
       transform: none;
     }
+    /* The sheet fills the screen on a phone, so a floating close button has
+       nowhere to sit but on top of the checkout itself. Hidden here, and the
+       row it used to reserve above the frame goes with it. */
     #coincircuit-checkout-overlay .cc-close {
-      top: calc(6px + env(safe-area-inset-top, 0px));
-      right: max(12px, env(safe-area-inset-right, 0px));
-      border-color: var(--cc-track);
-      background: transparent;
-      box-shadow: none;
+      display: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {

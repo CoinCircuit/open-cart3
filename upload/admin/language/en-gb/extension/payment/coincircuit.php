@@ -7,7 +7,10 @@ $_['text_extension']           = 'Extensions';
 $_['text_payment']             = 'Payment';
 $_['text_success']             = 'Success: You have modified CoinCircuit payment details.';
 $_['text_edit']                = 'Edit CoinCircuit';
-$_['text_coincircuit']         = 'Accept cryptocurrency payments via CoinCircuit. Shoppers are redirected to a secure CoinCircuit checkout, and the order status is updated automatically from signed webhooks.';
+// Rendered as raw HTML in the payment extension list, which is how the stock
+// branded extensions show a logo there instead of a sentence. Width matches
+// the built-in logos, which sit between 75 and 100 pixels wide.
+$_['text_coincircuit']         = '<a href="https://coincircuit.io" target="_blank"><img src="view/image/payment/coincircuit.png" alt="CoinCircuit" title="CoinCircuit" width="110" /></a>';
 $_['text_default_title']       = 'Cryptocurrency (CoinCircuit)';
 $_['text_enabled']             = 'Enabled';
 $_['text_disabled']            = 'Disabled';

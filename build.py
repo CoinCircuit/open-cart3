@@ -12,6 +12,7 @@ PACKAGE_FILES = (
     "upload/admin/language/en-gb/extension/payment/coincircuit.php",
     "upload/admin/model/extension/payment/coincircuit.php",
     "upload/admin/view/template/extension/payment/coincircuit.twig",
+    "upload/admin/view/image/payment/coincircuit.png",
     "upload/catalog/controller/extension/payment/coincircuit.php",
     "upload/catalog/language/en-gb/extension/payment/coincircuit.php",
     "upload/catalog/model/extension/payment/coincircuit.php",
